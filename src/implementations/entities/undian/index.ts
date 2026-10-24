@@ -18,3 +18,5 @@ export const undianModelSchema = z.object({
     })
     .describe("Peserta Info"),
 });
+
+export type UndianModel = z.infer<typeof undianModelSchema>;
