@@ -1,8 +1,8 @@
 {
   "name": "@musthida/scoring-entities",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Shared TypeScript entities and Zod schemass",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "scripts": {
     "test": "vitest run",
     "build": "tsup",
@@ -19,8 +19,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
     "./prisma/*": "./src/infra/database/migrations/*"
   },

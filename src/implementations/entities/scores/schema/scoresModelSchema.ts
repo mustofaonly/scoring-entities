@@ -21,7 +21,7 @@ export const scoresModelSchema = z.object({
   score_type: scoreTypes.describe("Score Type"),
   score: z.string().describe("Score"),
   jadwal_id: z.string().length(26).describe("Jadwal ID"),
-  peserta_id: z.string().length(26).describe("Peserta ID"),
+  peserta_team_id: z.string().length(26).describe("Peserta Team ID"),
   round: z.number().min(1).default(1).describe("Round"),
   increment: z.number().min(1).default(1).describe("Increment"),
   status: scoreStatus.default("pending").describe("Score Status"),

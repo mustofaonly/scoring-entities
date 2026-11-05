@@ -1,13 +1,11 @@
 import z from "zod";
 import { pesertaModelSchema } from "..";
-import { kontingenModelSchema } from "../../kontingen";
-import { weightModelSchema } from "../../weight";
+import { pesertaTeamInfoSchema } from "../../peserta_team";
 import { athletesModelSchema } from "../../athletes";
 
 export const infoPesertaResponseSchema = z.object({
   ...pesertaModelSchema.shape,
-  kontingen_info: kontingenModelSchema,
-  weight_ingo: weightModelSchema,
+  peserta_team_info: pesertaTeamInfoSchema,
   athletes_info: athletesModelSchema,
 });
 

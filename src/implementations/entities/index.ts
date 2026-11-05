@@ -8,6 +8,7 @@ export * from "./kelas";
 export * from "./kontingen";
 export * from "./logs";
 export * from "./peserta";
+export * from "./peserta_team";
 export * from "./roles";
 export * from "./scores";
 export * from "./undian";

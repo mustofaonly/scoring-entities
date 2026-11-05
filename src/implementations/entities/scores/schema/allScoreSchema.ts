@@ -7,7 +7,7 @@ export const allScoresResponseSchema = z.object({
 
 export const allScoresRequestSchema = z.object({
   jadwal_id: z.string().length(26),
-  peserta_id: z.string().length(26),
+  peserta_team_id: z.string().length(26),
   round: z.number().min(1).default(1),
   score_type: z.array(scoreTypes),
 });

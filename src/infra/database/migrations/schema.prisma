@@ -1,6 +1,6 @@
 // Derived from src/implementations/entities/*/schema/*ModelSchema.ts.
 // Configure the connection URL and generator for your Prisma version.
-// All foreign keys and to-one relations are intentionally optional for review.
+// Relation nullability follows the reviewed model; team references are required.
 // Reverse relation lists may be empty; Prisma does not support nullable lists.
 
 datasource db {
@@ -62,27 +62,27 @@ model Events {
   name        String
   arena       Int?
 
-  kontingen Kontingen[]
-  peserta   Peserta[]
-  jadwal    Jadwal[]
+  kontingen    Kontingen[]
+  peserta_team PesertaTeam[]
+  jadwal       Jadwal[]
 
   @@map("events")
 }
 
 model FinalScore {
-  id         String    @id @db.Char(26)
-  score_type ScoreType
-  score      String
-  jadwal_id  String?   @db.Char(26)
-  peserta_id String?   @db.Char(26)
-  round      Int       @default(1)
-  increment  Int       @default(1)
-  created_at Float
-  created_by String?   @db.Char(26)
+  id              String    @id @db.Char(26)
+  score_type      ScoreType
+  score           String
+  jadwal_id       String?   @db.Char(26)
+  peserta_team_id String    @db.Char(26)
+  round           Int       @default(1)
+  increment       Int       @default(1)
+  created_at      Float
+  created_by      String?   @db.Char(26)
 
-  jadwal  Jadwal?  @relation(fields: [jadwal_id], references: [id])
-  peserta Peserta? @relation(fields: [peserta_id], references: [id])
-  creator Users?   @relation("FinalScoreCreator", fields: [created_by], references: [id])
+  jadwal       Jadwal?     @relation(fields: [jadwal_id], references: [id])
+  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
+  creator      Users?      @relation("FinalScoreCreator", fields: [created_by], references: [id])
 
   @@map("final_score")
 }
@@ -101,8 +101,8 @@ model Golongan {
 
 model Jadwal {
   id            String  @id @db.Char(26)
-  events_id     String? @db.Char(26)
-  kategori_id   String? @db.Char(26)
+  events_id     String  @db.Char(26)
+  weight_id     String  @db.Char(26)
   arena         Int     @default(1)
   pool          Int     @default(1)
   round         Int     @default(1)
@@ -111,10 +111,10 @@ model Jadwal {
   blue_corner   String? @db.Char(26)
   score         Json
 
-  events           Events?      @relation(fields: [events_id], references: [id])
-  kategori         Kategori?    @relation(fields: [kategori_id], references: [id])
-  red_corner_info  Peserta?     @relation("JadwalRedCorner", fields: [red_corner], references: [id])
-  blue_corner_info Peserta?     @relation("JadwalBlueCorner", fields: [blue_corner], references: [id])
+  events           Events       @relation(fields: [events_id], references: [id])
+  weight           Weight       @relation(fields: [weight_id], references: [id])
+  red_corner_info  PesertaTeam? @relation("JadwalRedCorner", fields: [red_corner], references: [id])
+  blue_corner_info PesertaTeam? @relation("JadwalBlueCorner", fields: [blue_corner], references: [id])
   scores           Scores[]
   final_score      FinalScore[]
 
@@ -130,7 +130,6 @@ model Kategori {
   code        KategoriCode
 
   weight Weight[]
-  jadwal Jadwal[]
 
   @@map("kategori")
 }
@@ -151,8 +150,8 @@ model Kontingen {
   events_id   String? @db.Char(26)
   name        String
 
-  events  Events?   @relation(fields: [events_id], references: [id])
-  peserta Peserta[]
+  events       Events?       @relation(fields: [events_id], references: [id])
+  peserta_team PesertaTeam[]
 
   @@map("kontingen")
 }
@@ -173,25 +172,38 @@ model Logs {
 }
 
 model Peserta {
-  id           String  @id @db.Char(26)
-  external_id  String
-  weight_id    String? @db.Char(26)
-  athletes_id  String? @db.Char(26)
-  kontingen_id String? @db.Char(26)
-  events_id    String? @db.Char(26)
-  valid        Boolean @default(false)
+  id              String  @id @db.Char(26)
+  external_id     String
+  athletes_id     String? @db.Char(26)
+  valid           Boolean @default(false)
+  peserta_team_id String  @db.Char(26)
 
-  weight         Weight?      @relation(fields: [weight_id], references: [id])
-  athletes       Athletes?    @relation(fields: [athletes_id], references: [id])
-  kontingen      Kontingen?   @relation(fields: [kontingen_id], references: [id])
-  events         Events?      @relation(fields: [events_id], references: [id])
+  athletes     Athletes?   @relation(fields: [athletes_id], references: [id])
+  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
+
+  @@index([peserta_team_id])
+  @@map("peserta")
+}
+
+// Members share a non-unique peserta_team_id; team-owned competition data
+// and match records reference the team's unique primary key.
+model PesertaTeam {
+  id           String @id @db.Char(26)
+  weight_id    String @db.Char(26)
+  kontingen_id String @db.Char(26)
+  events_id    String @db.Char(26)
+
+  weight         Weight       @relation(fields: [weight_id], references: [id])
+  kontingen      Kontingen    @relation(fields: [kontingen_id], references: [id])
+  events         Events       @relation(fields: [events_id], references: [id])
+  members        Peserta[]
   undian         Undian[]
   scores         Scores[]
   final_score    FinalScore[]
   red_corner_of  Jadwal[]     @relation("JadwalRedCorner")
   blue_corner_of Jadwal[]     @relation("JadwalBlueCorner")
 
-  @@map("peserta")
+  @@map("peserta_team")
 }
 
 model Roles {
@@ -206,37 +218,38 @@ model Roles {
 }
 
 model Scores {
-  id         String      @id @db.Char(26)
-  score_type ScoreType
-  score      String
-  jadwal_id  String?     @db.Char(26)
-  peserta_id String?     @db.Char(26)
-  round      Int         @default(1)
-  increment  Int         @default(1)
-  status     ScoreStatus @default(pending)
-  created_at Float
-  created_by String?     @db.Char(26)
+  id              String      @id @db.Char(26)
+  score_type      ScoreType
+  peserta_team_id String      @db.Char(26)
+  score           String
+  jadwal_id       String?     @db.Char(26)
+  round           Int         @default(1)
+  increment       Int         @default(1)
+  status          ScoreStatus @default(pending)
+  created_at      Float
+  created_by      String?     @db.Char(26)
 
-  jadwal  Jadwal?  @relation(fields: [jadwal_id], references: [id])
-  peserta Peserta? @relation(fields: [peserta_id], references: [id])
-  creator Users?   @relation("ScoreCreator", fields: [created_by], references: [id])
+  jadwal       Jadwal?     @relation(fields: [jadwal_id], references: [id])
+  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
+  creator      Users?      @relation("ScoreCreator", fields: [created_by], references: [id])
 
   @@map("scores")
 }
 
 model Undian {
-  id         String  @id @db.Char(26)
-  pool       Int     @default(1)
-  increment  Int     @default(1)
-  peserta_id String? @db.Char(26)
-  created_at Float
-  created_by String? @db.Char(26)
-  updated_at Float?
-  updated_by String? @db.Char(26)
+  id                String  @id @db.Char(26)
+  pool              Int     @default(1)
+  increment         Int     @default(1)
+  peserta_team_id   String  @db.Char(26)
+  created_at        Float
+  created_by        String? @db.Char(26)
+  updated_at        Float?
+  updated_by        String? @db.Char(26)
+  peserta_team_info Json
 
-  peserta_info Peserta? @relation(fields: [peserta_id], references: [id])
-  creator      Users?   @relation("UndianCreator", fields: [created_by], references: [id])
-  updater      Users?   @relation("UndianUpdater", fields: [updated_by], references: [id])
+  creator      Users?      @relation("UndianCreator", fields: [created_by], references: [id])
+  updater      Users?      @relation("UndianUpdater", fields: [updated_by], references: [id])
+  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
 
   @@map("undian")
 }
@@ -281,10 +294,11 @@ model Weight {
   min_weight  Float?
   max_weight  Float?
 
-  kategori_info Kategori? @relation(fields: [kategori_id], references: [id])
-  golongan_info Golongan? @relation(fields: [golongan_id], references: [id])
-  kelas_info    Kelas?    @relation(fields: [kelas_id], references: [id])
-  peserta       Peserta[]
+  kategori_info Kategori?     @relation(fields: [kategori_id], references: [id])
+  golongan_info Golongan?     @relation(fields: [golongan_id], references: [id])
+  kelas_info    Kelas?        @relation(fields: [kelas_id], references: [id])
+  peserta_team  PesertaTeam[]
+  jadwals       Jadwal[]
 
   @@map("weight")
 }
