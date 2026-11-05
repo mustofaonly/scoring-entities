@@ -1,5 +1,5 @@
 import z from "zod";
-import { scoresModelSchema, scoreTypes } from "..";
+import { scoresModelSchema, scoreTypes } from "./scoresModelSchema";
 
 export const allScoresResponseSchema = z.object({
   ...scoresModelSchema.shape,

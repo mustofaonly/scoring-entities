@@ -1,5 +1,5 @@
 import z from "zod";
-import { eventsModelSchema } from "..";
+import { eventsModelSchema } from "./eventsModelSchema";
 
 export const listEventsResponseSchema = z.object({
   ...eventsModelSchema.shape,

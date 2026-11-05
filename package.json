@@ -1,12 +1,16 @@
 {
   "name": "@musthida/scoring-entities",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Shared TypeScript entities and Zod schemass",
   "main": "./dist/index.cjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "build": "tsup",
-    "prepublishOnly": "npm run build"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm test",
+    "prepublishOnly": "npm run check && npm run build",
+    "test:report": "vitest run --reporter=default --reporter=json --outputFile=./tests/test-results.json"
   },
   "repository": {
     "type": "git",
@@ -17,10 +21,12 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./prisma/*": "./src/infra/database/migrations/*"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/infra/database/migrations"
   ],
   "keywords": [
     "typescript",
@@ -41,6 +47,7 @@
   },
   "devDependencies": {
     "tsup": "^9.0.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5"
   }
 }

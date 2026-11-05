@@ -1,5 +1,5 @@
 import z from "zod";
-import { athletesModelSchema } from "..";
+import { athletesModelSchema } from "./athletesModelSchema";
 
 export const listAthletesResponseSchema = z.object({
   ...athletesModelSchema.shape,

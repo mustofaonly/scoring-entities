@@ -1,0 +1,17 @@
+// Copy this file to the repository root as prisma.config.ts before using it.
+// Paths below are relative to that root-level configuration file.
+// Targets Prisma ORM 7; see MIGRATION_GUIDE.md for setup and Prisma 6 notes.
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
+
+export default defineConfig({
+  schema: "src/infra/database/migrations/schema.prisma",
+  migrations: {
+    path: "src/infra/database/migrations",
+  },
+  datasource: {
+    url: env("DATABASE_URL"),
+    // For hosts where Prisma cannot create a shadow database automatically:
+    // shadowDatabaseUrl: env("SHADOW_DATABASE_URL"),
+  },
+});

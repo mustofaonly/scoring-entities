@@ -1,5 +1,5 @@
 import z from "zod";
-import { kontingenModelSchema } from "..";
+import { kontingenModelSchema } from "./kontingenModelSchema";
 
 export const allKontingenResponseSchema = z.object({
   ...kontingenModelSchema.shape,

@@ -1,0 +1,290 @@
+// Derived from src/implementations/entities/*/schema/*ModelSchema.ts.
+// Configure the connection URL and generator for your Prisma version.
+// All foreign keys and to-one relations are intentionally optional for review.
+// Reverse relation lists may be empty; Prisma does not support nullable lists.
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum KategoriCode {
+  tanding
+  ganda
+  regu
+  jurus_baku
+  solo_kreatif
+  tunggal
+}
+
+enum ScoreType {
+  punch
+  kick
+  drop
+  bina
+  hukum
+  tegur
+  kemantapan
+  kebenaran
+}
+
+enum ScoreStatus {
+  pending
+  valid
+  invalid
+}
+
+enum LogOperation {
+  create
+  update
+  delete
+}
+
+enum LogStatus {
+  success
+  failed
+}
+
+model Athletes {
+  id     String  @id @db.Char(26)
+  nik    String
+  name   String
+  gender Int
+  dob    String?
+
+  peserta Peserta[]
+
+  @@map("athletes")
+}
+
+model Events {
+  id          String @id @db.Char(26)
+  external_id String
+  name        String
+  arena       Int?
+
+  kontingen Kontingen[]
+  peserta   Peserta[]
+  jadwal    Jadwal[]
+
+  @@map("events")
+}
+
+model FinalScore {
+  id         String    @id @db.Char(26)
+  score_type ScoreType
+  score      String
+  jadwal_id  String?   @db.Char(26)
+  peserta_id String?   @db.Char(26)
+  round      Int       @default(1)
+  increment  Int       @default(1)
+  created_at Float
+  created_by String?   @db.Char(26)
+
+  jadwal  Jadwal?  @relation(fields: [jadwal_id], references: [id])
+  peserta Peserta? @relation(fields: [peserta_id], references: [id])
+  creator Users?   @relation("FinalScoreCreator", fields: [created_by], references: [id])
+
+  @@map("final_score")
+}
+
+model Golongan {
+  id          String @id @db.Char(26)
+  external_id String
+  name        String
+  min_age     Float?
+  max_age     Float?
+
+  weight Weight[]
+
+  @@map("golongan")
+}
+
+model Jadwal {
+  id            String  @id @db.Char(26)
+  events_id     String? @db.Char(26)
+  kategori_id   String? @db.Char(26)
+  arena         Int     @default(1)
+  pool          Int     @default(1)
+  round         Int     @default(1)
+  cualification String
+  red_corner    String? @db.Char(26)
+  blue_corner   String? @db.Char(26)
+  score         Json
+
+  events           Events?      @relation(fields: [events_id], references: [id])
+  kategori         Kategori?    @relation(fields: [kategori_id], references: [id])
+  red_corner_info  Peserta?     @relation("JadwalRedCorner", fields: [red_corner], references: [id])
+  blue_corner_info Peserta?     @relation("JadwalBlueCorner", fields: [blue_corner], references: [id])
+  scores           Scores[]
+  final_score      FinalScore[]
+
+  @@map("jadwal")
+}
+
+model Kategori {
+  id          String       @id @db.Char(26)
+  external_id String
+  name        String
+  min_athlete Int
+  max_athlete Int
+  code        KategoriCode
+
+  weight Weight[]
+  jadwal Jadwal[]
+
+  @@map("kategori")
+}
+
+model Kelas {
+  id          String @id @db.Char(26)
+  external_id String
+  name        String
+
+  weight Weight[]
+
+  @@map("kelas")
+}
+
+model Kontingen {
+  id          String  @id @db.Char(26)
+  external_id String
+  events_id   String? @db.Char(26)
+  name        String
+
+  events  Events?   @relation(fields: [events_id], references: [id])
+  peserta Peserta[]
+
+  @@map("kontingen")
+}
+
+model Logs {
+  id               String       @id @db.Char(26)
+  operation        LogOperation
+  status           LogStatus
+  message          String?
+  data             Json
+  reference_table  String
+  reference_column String
+  reference_value  String
+  created_at       Float
+  increment        Int          @default(1)
+
+  @@map("logs")
+}
+
+model Peserta {
+  id           String  @id @db.Char(26)
+  external_id  String
+  weight_id    String? @db.Char(26)
+  athletes_id  String? @db.Char(26)
+  kontingen_id String? @db.Char(26)
+  events_id    String? @db.Char(26)
+  valid        Boolean @default(false)
+
+  weight         Weight?      @relation(fields: [weight_id], references: [id])
+  athletes       Athletes?    @relation(fields: [athletes_id], references: [id])
+  kontingen      Kontingen?   @relation(fields: [kontingen_id], references: [id])
+  events         Events?      @relation(fields: [events_id], references: [id])
+  undian         Undian[]
+  scores         Scores[]
+  final_score    FinalScore[]
+  red_corner_of  Jadwal[]     @relation("JadwalRedCorner")
+  blue_corner_of Jadwal[]     @relation("JadwalBlueCorner")
+
+  @@map("peserta")
+}
+
+model Roles {
+  id          String  @id @db.Char(26)
+  name        String
+  description String?
+  level       Int
+
+  users Users[]
+
+  @@map("roles")
+}
+
+model Scores {
+  id         String      @id @db.Char(26)
+  score_type ScoreType
+  score      String
+  jadwal_id  String?     @db.Char(26)
+  peserta_id String?     @db.Char(26)
+  round      Int         @default(1)
+  increment  Int         @default(1)
+  status     ScoreStatus @default(pending)
+  created_at Float
+  created_by String?     @db.Char(26)
+
+  jadwal  Jadwal?  @relation(fields: [jadwal_id], references: [id])
+  peserta Peserta? @relation(fields: [peserta_id], references: [id])
+  creator Users?   @relation("ScoreCreator", fields: [created_by], references: [id])
+
+  @@map("scores")
+}
+
+model Undian {
+  id         String  @id @db.Char(26)
+  pool       Int     @default(1)
+  increment  Int     @default(1)
+  peserta_id String? @db.Char(26)
+  created_at Float
+  created_by String? @db.Char(26)
+  updated_at Float?
+  updated_by String? @db.Char(26)
+
+  peserta_info Peserta? @relation(fields: [peserta_id], references: [id])
+  creator      Users?   @relation("UndianCreator", fields: [created_by], references: [id])
+  updater      Users?   @relation("UndianUpdater", fields: [updated_by], references: [id])
+
+  @@map("undian")
+}
+
+model UserLogin {
+  id            String  @id @db.Char(26)
+  users_id      String? @db.Char(26)
+  token         String
+  refresh_token String
+  expired_at    Float
+  created_at    Float
+  arena         Int
+
+  users_info Users? @relation(fields: [users_id], references: [id])
+
+  @@map("user_login")
+}
+
+model Users {
+  id       String  @id @db.Char(26)
+  name     String
+  username String
+  password String
+  roles_id String? @db.Char(26)
+
+  roles_info          Roles?       @relation(fields: [roles_id], references: [id])
+  user_login          UserLogin[]
+  created_scores      Scores[]     @relation("ScoreCreator")
+  created_final_score FinalScore[] @relation("FinalScoreCreator")
+  created_undian      Undian[]     @relation("UndianCreator")
+  updated_undian      Undian[]     @relation("UndianUpdater")
+
+  @@map("users")
+}
+
+model Weight {
+  id          String  @id @db.Char(26)
+  external_id String
+  kategori_id String? @db.Char(26)
+  golongan_id String? @db.Char(26)
+  kelas_id    String? @db.Char(26)
+  min_weight  Float?
+  max_weight  Float?
+
+  kategori_info Kategori? @relation(fields: [kategori_id], references: [id])
+  golongan_info Golongan? @relation(fields: [golongan_id], references: [id])
+  kelas_info    Kelas?    @relation(fields: [kelas_id], references: [id])
+  peserta       Peserta[]
+
+  @@map("weight")
+}
