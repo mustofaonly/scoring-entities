@@ -8,7 +8,6 @@ import {
 import {
   AthletesModel,
   ListAthletesResponse,
-  listAthletesResponseSchema,
 } from "../../entities";
 
 export interface AthletesRepository
@@ -16,6 +15,6 @@ export interface AthletesRepository
     WriteRepository<AthletesModel, string>,
     ReadRepository<AthletesModel, string>,
     DataTableRepository<
-      DataTableRequest<typeof listAthletesResponseSchema>,
+      DataTableRequest<keyof ListAthletesResponse>,
       DataTableResponse<ListAthletesResponse>
     > {}

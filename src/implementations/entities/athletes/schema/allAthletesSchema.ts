@@ -1,9 +1,10 @@
 import z from "zod";
+import { athletesModelSchema } from "./athletesModelSchema";
 
-export const allAthletesResponseSchema = z.object({
-  id: z.string().length(26),
-  external_id: z.string().min(1).max(300),
-  name: z.string().min(2).max(300),
+export const allAthletesResponseSchema = athletesModelSchema.pick({
+  id: true,
+  national_id: true,
+  name: true,
 });
 
 export type AllAthletesResponse = z.infer<typeof allAthletesResponseSchema>;

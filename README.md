@@ -27,3 +27,11 @@ const schemaPath = require.resolve("@musthida/scoring-entities/prisma/schema.pri
 const configExamplePath = require.resolve("@musthida/scoring-entities/prisma/prisma.config.ts.example");
 const guidePath = require.resolve("@musthida/scoring-entities/prisma/MIGRATION_GUIDE.md");
 ```
+
+## English entity names
+
+The canonical API uses English names such as `MatchScheduleModel`,
+`ParticipantTeamModel`, `CategoryModel`, `DrawModel`, and their corresponding
+schemas/repositories. See [the naming migration guide](./src/infra/database/migrations/NAMING_MIGRATION.md)
+for renamed exports, relational fields, and compatibility considerations. Silat
+category and score enum values are preserved.

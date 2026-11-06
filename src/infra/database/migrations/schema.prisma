@@ -1,13 +1,11 @@
-// Derived from src/implementations/entities/*/schema/*ModelSchema.ts.
-// Configure the connection URL and generator for your Prisma version.
-// Relation nullability follows the reviewed model; team references are required.
-// Reverse relation lists may be empty; Prisma does not support nullable lists.
+// Canonical English entity names and fields. Silat enum values are domain codes.
+// Application-supplied IDs use fixed-width 26-character strings.
 
 datasource db {
   provider = "postgresql"
 }
 
-enum KategoriCode {
+enum CategoryCode {
   tanding
   ganda
   regu
@@ -44,116 +42,177 @@ enum LogStatus {
   failed
 }
 
-model Athletes {
-  id     String  @id @db.Char(26)
-  nik    String
-  name   String
-  gender Int
-  dob    String?
+enum AthleteStatus {
+  disqualified
+  surrendered
+  valid
+  pending
+}
 
-  peserta Peserta[]
+enum WinnerStatus {
+  winner
+  loser
+  draw
+  pending
+}
+
+enum MatchScheduleSession {
+  morning
+  afternoon
+  evening
+}
+
+enum MatchScheduleStatus {
+  pending
+  running
+  finished
+}
+
+enum WeightStatus {
+  overweight
+  underweight
+  surrendered
+  valid
+  pending
+}
+
+model Athletes {
+  id           String        @id @db.Char(26)
+  national_id  String
+  name         String
+  gender       Int
+  dob          String?
+  avatar       String?
+  participants Participant[]
 
   @@map("athletes")
 }
 
 model Events {
-  id          String @id @db.Char(26)
-  external_id String
-  name        String
-  arena       Int?
-
-  kontingen    Kontingen[]
-  peserta_team PesertaTeam[]
-  jadwal       Jadwal[]
+  id                String            @id @db.Char(26)
+  external_id       String
+  name              String
+  arena             Int?
+  contingents       Contingent[]
+  participant_teams ParticipantTeam[]
+  match_schedules   MatchSchedule[]
+  winners           Winner[]
 
   @@map("events")
 }
 
 model FinalScore {
-  id              String    @id @db.Char(26)
-  score_type      ScoreType
-  score           String
-  jadwal_id       String?   @db.Char(26)
-  peserta_team_id String    @db.Char(26)
-  round           Int       @default(1)
-  increment       Int       @default(1)
-  created_at      Float
-  created_by      String?   @db.Char(26)
-
-  jadwal       Jadwal?     @relation(fields: [jadwal_id], references: [id])
-  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
-  creator      Users?      @relation("FinalScoreCreator", fields: [created_by], references: [id])
+  id                  String          @id @db.Char(26)
+  score_type          ScoreType
+  score               String
+  match_schedule_id   String          @db.Char(26)
+  participant_team_id String          @db.Char(26)
+  round               Int             @default(1)
+  increment           Int             @default(1)
+  created_at          Float
+  created_by          String          @db.Char(26)
+  match_schedule      MatchSchedule   @relation(fields: [match_schedule_id], references: [id])
+  participant_team    ParticipantTeam @relation(fields: [participant_team_id], references: [id])
+  creator             Users           @relation("FinalScoreCreator", fields: [created_by], references: [id])
 
   @@map("final_score")
 }
 
-model Golongan {
-  id          String @id @db.Char(26)
+model AgeGroup {
+  id          String   @id @db.Char(26)
   external_id String
   name        String
   min_age     Float?
   max_age     Float?
+  weights     Weight[]
 
-  weight Weight[]
-
-  @@map("golongan")
+  @@map("age_group")
 }
 
-model Jadwal {
-  id            String  @id @db.Char(26)
-  events_id     String  @db.Char(26)
-  weight_id     String  @db.Char(26)
-  arena         Int     @default(1)
-  pool          Int     @default(1)
-  round         Int     @default(1)
-  cualification String
-  red_corner    String? @db.Char(26)
-  blue_corner   String? @db.Char(26)
-  score         Json
+model MatchSchedule {
+  id                     String               @id @db.Char(26)
+  events_id              String               @db.Char(26)
+  weight_id              String               @db.Char(26)
+  arena                  Int                  @default(1)
+  pool                   Int                  @default(1)
+  round                  Int                  @default(1)
+  qualification          String
+  red_corner             String?              @db.Char(26)
+  blue_corner            String?              @db.Char(26)
+  date                   String
+  session                MatchScheduleSession
+  winner                 String?              @db.Char(26)
+  next_match_schedule_id String?              @db.Char(26)
+  status                 MatchScheduleStatus  @default(pending)
+  properties             Json                 @default("{\"red\":{\"status\":\"pending\",\"score\":{\"total\":0,\"properties\":{}},\"winner_status\":{\"status\":\"pending\",\"remarks\":null}},\"blue\":{\"status\":\"pending\",\"score\":{\"total\":0,\"properties\":{}},\"winner_status\":{\"status\":\"pending\",\"remarks\":null}}}")
+  created_at             Float
+  updated_at             Float
+  created_by             String               @db.Char(26)
+  updated_by             String               @db.Char(26)
 
-  events           Events       @relation(fields: [events_id], references: [id])
-  weight           Weight       @relation(fields: [weight_id], references: [id])
-  red_corner_info  PesertaTeam? @relation("JadwalRedCorner", fields: [red_corner], references: [id])
-  blue_corner_info PesertaTeam? @relation("JadwalBlueCorner", fields: [blue_corner], references: [id])
-  scores           Scores[]
-  final_score      FinalScore[]
+  events                   Events               @relation(fields: [events_id], references: [id])
+  weight                   Weight               @relation(fields: [weight_id], references: [id])
+  red_corner_info          ParticipantTeam?     @relation("MatchScheduleRedCorner", fields: [red_corner], references: [id])
+  blue_corner_info         ParticipantTeam?     @relation("MatchScheduleBlueCorner", fields: [blue_corner], references: [id])
+  winner_info              ParticipantTeam?     @relation("MatchScheduleWinner", fields: [winner], references: [id])
+  next_match_schedule      MatchSchedule?       @relation("MatchScheduleProgression", fields: [next_match_schedule_id], references: [id])
+  previous_match_schedules MatchSchedule[]      @relation("MatchScheduleProgression")
+  creator                  Users                @relation("MatchScheduleCreator", fields: [created_by], references: [id])
+  updater                  Users                @relation("MatchScheduleUpdater", fields: [updated_by], references: [id])
+  scores                   Scores[]
+  final_scores             FinalScore[]
+  calls                    MatchScheduleCalls[]
+  winners                  Winner[]
 
-  @@map("jadwal")
+  @@map("match_schedule")
 }
 
-model Kategori {
+model MatchScheduleCalls {
+  id                  String          @id @db.Char(26)
+  match_schedule_id   String          @db.Char(26)
+  participant_team_id String          @db.Char(26)
+  call_count          Int             @default(1)
+  created_at          String
+  created_by          String          @db.Char(26)
+  match_schedule      MatchSchedule   @relation(fields: [match_schedule_id], references: [id])
+  participant_team    ParticipantTeam @relation(fields: [participant_team_id], references: [id])
+  creator             Users           @relation("MatchScheduleCallsCreator", fields: [created_by], references: [id])
+
+  @@map("match_schedule_calls")
+}
+
+model Category {
   id          String       @id @db.Char(26)
   external_id String
   name        String
   min_athlete Int
   max_athlete Int
-  code        KategoriCode
+  code        CategoryCode
+  weights     Weight[]
 
-  weight Weight[]
-
-  @@map("kategori")
+  @@map("category")
 }
 
-model Kelas {
-  id          String @id @db.Char(26)
+model WeightClass {
+  id          String   @id @db.Char(26)
   external_id String
   name        String
+  weights     Weight[]
 
-  weight Weight[]
-
-  @@map("kelas")
+  @@map("weight_class")
 }
 
-model Kontingen {
-  id          String  @id @db.Char(26)
-  external_id String
-  events_id   String? @db.Char(26)
-  name        String
+model Contingent {
+  id                String            @id @db.Char(26)
+  external_id       String
+  events_id         String            @db.Char(26)
+  name              String
+  flag              String?
+  events            Events            @relation(fields: [events_id], references: [id])
+  participant_teams ParticipantTeam[]
+  winners           Winner[]
 
-  events       Events?       @relation(fields: [events_id], references: [id])
-  peserta_team PesertaTeam[]
-
-  @@map("kontingen")
+  @@map("contingent")
 }
 
 model Logs {
@@ -171,39 +230,39 @@ model Logs {
   @@map("logs")
 }
 
-model Peserta {
-  id              String  @id @db.Char(26)
-  external_id     String
-  athletes_id     String? @db.Char(26)
-  valid           Boolean @default(false)
-  peserta_team_id String  @db.Char(26)
+model Participant {
+  id                  String          @id @db.Char(26)
+  external_id         String
+  athletes_id         String          @db.Char(26)
+  valid               Boolean         @default(false)
+  participant_team_id String          @db.Char(26)
+  athletes            Athletes        @relation(fields: [athletes_id], references: [id])
+  participant_team    ParticipantTeam @relation(fields: [participant_team_id], references: [id])
 
-  athletes     Athletes?   @relation(fields: [athletes_id], references: [id])
-  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
-
-  @@index([peserta_team_id])
-  @@map("peserta")
+  @@index([participant_team_id])
+  @@map("participant")
 }
 
-// Members share a non-unique peserta_team_id; team-owned competition data
-// and match records reference the team's unique primary key.
-model PesertaTeam {
-  id           String @id @db.Char(26)
-  weight_id    String @db.Char(26)
-  kontingen_id String @db.Char(26)
-  events_id    String @db.Char(26)
+model ParticipantTeam {
+  id                   String               @id @db.Char(26)
+  weight_id            String               @db.Char(26)
+  contingent_id        String               @db.Char(26)
+  events_id            String               @db.Char(26)
+  weight               Weight               @relation(fields: [weight_id], references: [id])
+  contingent           Contingent           @relation(fields: [contingent_id], references: [id])
+  events               Events               @relation(fields: [events_id], references: [id])
+  members              Participant[]
+  draws                Draw[]
+  scores               Scores[]
+  final_scores         FinalScore[]
+  red_corner_of        MatchSchedule[]      @relation("MatchScheduleRedCorner")
+  blue_corner_of       MatchSchedule[]      @relation("MatchScheduleBlueCorner")
+  won_match_schedules  MatchSchedule[]      @relation("MatchScheduleWinner")
+  match_schedule_calls MatchScheduleCalls[]
+  weight_verifications WeightVerification[]
+  winners              Winner[]
 
-  weight         Weight       @relation(fields: [weight_id], references: [id])
-  kontingen      Kontingen    @relation(fields: [kontingen_id], references: [id])
-  events         Events       @relation(fields: [events_id], references: [id])
-  members        Peserta[]
-  undian         Undian[]
-  scores         Scores[]
-  final_score    FinalScore[]
-  red_corner_of  Jadwal[]     @relation("JadwalRedCorner")
-  blue_corner_of Jadwal[]     @relation("JadwalBlueCorner")
-
-  @@map("peserta_team")
+  @@map("participant_team")
 }
 
 model Roles {
@@ -211,94 +270,140 @@ model Roles {
   name        String
   description String?
   level       Int
-
-  users Users[]
+  users       Users[]
 
   @@map("roles")
 }
 
 model Scores {
-  id              String      @id @db.Char(26)
-  score_type      ScoreType
-  peserta_team_id String      @db.Char(26)
-  score           String
-  jadwal_id       String?     @db.Char(26)
-  round           Int         @default(1)
-  increment       Int         @default(1)
-  status          ScoreStatus @default(pending)
-  created_at      Float
-  created_by      String?     @db.Char(26)
-
-  jadwal       Jadwal?     @relation(fields: [jadwal_id], references: [id])
-  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
-  creator      Users?      @relation("ScoreCreator", fields: [created_by], references: [id])
+  id                  String          @id @db.Char(26)
+  score_type          ScoreType
+  score               String
+  match_schedule_id   String          @db.Char(26)
+  participant_team_id String          @db.Char(26)
+  round               Int             @default(1)
+  increment           Int             @default(1)
+  status              ScoreStatus     @default(pending)
+  created_at          Float
+  created_by          String          @db.Char(26)
+  match_schedule      MatchSchedule   @relation(fields: [match_schedule_id], references: [id])
+  participant_team    ParticipantTeam @relation(fields: [participant_team_id], references: [id])
+  creator             Users           @relation("ScoreCreator", fields: [created_by], references: [id])
 
   @@map("scores")
 }
 
-model Undian {
-  id                String  @id @db.Char(26)
-  pool              Int     @default(1)
-  increment         Int     @default(1)
-  peserta_team_id   String  @db.Char(26)
-  created_at        Float
-  created_by        String? @db.Char(26)
-  updated_at        Float?
-  updated_by        String? @db.Char(26)
-  peserta_team_info Json
+model Draw {
+  id                    String          @id @db.Char(26)
+  pool                  Int             @default(1)
+  increment             Int             @default(1)
+  participant_team_id   String          @db.Char(26)
+  participant_team_info Json
+  created_at            Float
+  created_by            String          @db.Char(26)
+  updated_at            Float?
+  updated_by            String?         @db.Char(26)
+  participant_team      ParticipantTeam @relation(fields: [participant_team_id], references: [id])
+  creator               Users           @relation("DrawCreator", fields: [created_by], references: [id])
+  updater               Users?          @relation("DrawUpdater", fields: [updated_by], references: [id])
 
-  creator      Users?      @relation("UndianCreator", fields: [created_by], references: [id])
-  updater      Users?      @relation("UndianUpdater", fields: [updated_by], references: [id])
-  peserta_team PesertaTeam @relation(fields: [peserta_team_id], references: [id])
-
-  @@map("undian")
+  @@map("draw")
 }
 
 model UserLogin {
-  id            String  @id @db.Char(26)
-  users_id      String? @db.Char(26)
+  id            String @id @db.Char(26)
+  users_id      String @db.Char(26)
   token         String
   refresh_token String
   expired_at    Float
   created_at    Float
   arena         Int
-
-  users_info Users? @relation(fields: [users_id], references: [id])
+  users_info    Users  @relation(fields: [users_id], references: [id])
 
   @@map("user_login")
 }
 
 model Users {
-  id       String  @id @db.Char(26)
-  name     String
-  username String
-  password String
-  roles_id String? @db.Char(26)
-
-  roles_info          Roles?       @relation(fields: [roles_id], references: [id])
-  user_login          UserLogin[]
-  created_scores      Scores[]     @relation("ScoreCreator")
-  created_final_score FinalScore[] @relation("FinalScoreCreator")
-  created_undian      Undian[]     @relation("UndianCreator")
-  updated_undian      Undian[]     @relation("UndianUpdater")
+  id                                String                    @id @db.Char(26)
+  name                              String
+  username                          String
+  password                          String
+  roles_id                          String                    @db.Char(26)
+  roles_info                        Roles                     @relation(fields: [roles_id], references: [id])
+  user_logins                       UserLogin[]
+  created_scores                    Scores[]                  @relation("ScoreCreator")
+  created_final_scores              FinalScore[]              @relation("FinalScoreCreator")
+  created_draws                     Draw[]                    @relation("DrawCreator")
+  updated_draws                     Draw[]                    @relation("DrawUpdater")
+  created_match_schedules           MatchSchedule[]           @relation("MatchScheduleCreator")
+  updated_match_schedules           MatchSchedule[]           @relation("MatchScheduleUpdater")
+  created_match_schedule_calls      MatchScheduleCalls[]      @relation("MatchScheduleCallsCreator")
+  verified_weights                  WeightVerification[]      @relation("WeightVerifier")
+  created_weight_verification_calls WeightVerificationCalls[] @relation("WeightVerificationCallsCreator")
 
   @@map("users")
 }
 
 model Weight {
-  id          String  @id @db.Char(26)
-  external_id String
-  kategori_id String? @db.Char(26)
-  golongan_id String? @db.Char(26)
-  kelas_id    String? @db.Char(26)
-  min_weight  Float?
-  max_weight  Float?
-
-  kategori_info Kategori?     @relation(fields: [kategori_id], references: [id])
-  golongan_info Golongan?     @relation(fields: [golongan_id], references: [id])
-  kelas_info    Kelas?        @relation(fields: [kelas_id], references: [id])
-  peserta_team  PesertaTeam[]
-  jadwals       Jadwal[]
+  id                String               @id @db.Char(26)
+  external_id       String
+  category_id       String               @db.Char(26)
+  age_group_id      String               @db.Char(26)
+  weight_class_id   String?              @db.Char(26)
+  min_weight        Float?
+  max_weight        Float?
+  category_info     Category             @relation(fields: [category_id], references: [id])
+  age_group_info    AgeGroup             @relation(fields: [age_group_id], references: [id])
+  weight_class_info WeightClass?         @relation(fields: [weight_class_id], references: [id])
+  participant_teams ParticipantTeam[]
+  match_schedules   MatchSchedule[]
+  verifications     WeightVerification[]
+  winners           Winner[]
 
   @@map("weight")
+}
+
+model WeightVerification {
+  id                  String                    @id @db.Char(26)
+  participant_team_id String                    @db.Char(26)
+  weight_id           String                    @db.Char(26)
+  verified_by         String?                   @db.Char(26)
+  verified_at         DateTime?
+  status              WeightStatus              @default(pending)
+  participant_team    ParticipantTeam           @relation(fields: [participant_team_id], references: [id])
+  weight              Weight                    @relation(fields: [weight_id], references: [id])
+  verifier            Users?                    @relation("WeightVerifier", fields: [verified_by], references: [id])
+  calls               WeightVerificationCalls[]
+
+  @@map("weight_verification")
+}
+
+model WeightVerificationCalls {
+  id                     String             @id @db.Char(26)
+  weight_verification_id String             @db.Char(26)
+  call_count             Int                @default(1)
+  created_at             String
+  created_by             String             @db.Char(26)
+  weight_verification    WeightVerification @relation(fields: [weight_verification_id], references: [id])
+  creator                Users              @relation("WeightVerificationCallsCreator", fields: [created_by], references: [id])
+
+  @@map("weight_verification_calls")
+}
+
+model Winner {
+  id                  String          @id @db.Char(26)
+  events_id           String          @db.Char(26)
+  participant_team_id String          @db.Char(26)
+  contingent_id       String          @db.Char(26)
+  match_schedule_id   String          @db.Char(26)
+  weight_id           String          @db.Char(26)
+  rank                Float
+  winner_status       WinnerStatus    @default(pending)
+  events              Events          @relation(fields: [events_id], references: [id])
+  participant_team    ParticipantTeam @relation(fields: [participant_team_id], references: [id])
+  contingent          Contingent      @relation(fields: [contingent_id], references: [id])
+  match_schedule      MatchSchedule   @relation(fields: [match_schedule_id], references: [id])
+  weight              Weight          @relation(fields: [weight_id], references: [id])
+
+  @@map("winner")
 }

@@ -1,2 +1,2 @@
 export * from "./schema/scoresModelSchema";
-export * from "./schema/allScoreSchema";
+export * from "./schema/allScoresSchema";

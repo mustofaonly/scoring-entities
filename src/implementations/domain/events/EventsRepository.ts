@@ -8,7 +8,6 @@ import {
 import {
   EventsModel,
   ListEventsResponse,
-  listEventsResponseSchema,
 } from "../../entities";
 
 export interface EventsRepository
@@ -16,6 +15,6 @@ export interface EventsRepository
     WriteRepository<EventsModel>,
     ReadRepository<EventsModel>,
     DataTableRepository<
-      DataTableRequest<typeof listEventsResponseSchema>,
+      DataTableRequest<keyof ListEventsResponse>,
       DataTableResponse<ListEventsResponse>
     > {}
