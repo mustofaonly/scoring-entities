@@ -26,12 +26,17 @@ export const matchScheduleStatusSchema = z.enum([
   "running",
   "finished",
 ]);
+export const matchScheduleTypeSchema = z.enum(["pool", "match"]);
+export const matchCornerSchema = z.enum(["red", "blue"]);
 
 export const matchScheduleModelSchema = z.object({
   id: z.string().length(26).describe("Match Schedule ID"),
   events_id: z.string().length(26).describe("Events ID"),
   weight_id: z.string().length(26).describe("Weight ID"),
-  arena: z.number().min(1).default(1).describe("Arena"),
+  arena: z.number().min(1).nullable().default(1).describe("Arena"),
+  schedule_type: matchScheduleTypeSchema.default("match"),
+  bracket_number: z.number().int().nonnegative().nullable().default(null),
+  schedule_number: z.number().int().nonnegative().nullable().default(null),
   pool: z.number().min(1).default(1).describe("Pool"),
   round: z.number().min(1).default(1).describe("Round"),
   qualification: z.string().describe("Qualification"),
@@ -45,14 +50,15 @@ export const matchScheduleModelSchema = z.object({
     .length(26)
     .nullable()
     .describe("Blue Corner Participant Team ID"),
-  date: z.string().describe("Date"),
-  session: matchScheduleSessionSchema.describe("Session"),
+  date: z.string().nullable().describe("Date"),
+  session: matchScheduleSessionSchema.nullable().describe("Session"),
   winner: z.string().length(26).nullable().describe("Winner Participant Team ID"),
   next_match_schedule_id: z
     .string()
     .length(26)
     .nullable()
     .describe("Next Match Schedule ID"),
+  next_corner: matchCornerSchema.nullable().default(null),
   status: matchScheduleStatusSchema.default("pending"),
   properties: z
     .object({
@@ -129,5 +135,7 @@ export const matchScheduleModelSchema = z.object({
 export type MatchScheduleModel = z.infer<typeof matchScheduleModelSchema>;
 export type MatchScheduleSession = z.infer<typeof matchScheduleSessionSchema>;
 export type MatchScheduleStatus = z.infer<typeof matchScheduleStatusSchema>;
+export type MatchScheduleType = z.infer<typeof matchScheduleTypeSchema>;
+export type MatchCorner = z.infer<typeof matchCornerSchema>;
 export type AthleteStatus = z.infer<typeof athleteStatusSchema>;
 export type WinnerStatus = z.infer<typeof winnerStatusSchema>;

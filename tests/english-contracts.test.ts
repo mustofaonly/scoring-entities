@@ -25,6 +25,14 @@ describe("English entity contracts", () => {
   it("includes the new match lifecycle fields and defaults", () => {
     const schedule = entities.matchScheduleModelSchema.parse({ id, events_id: id, weight_id: id, qualification: "final", red_corner: id, blue_corner: null, date: "2026-11-07", session: "morning", winner: null, next_match_schedule_id: null, created_at: 1, updated_at: 1, created_by: id, updated_by: id });
     expect(schedule.status).toBe("pending");
+    expect(schedule.arena).toBe(1);
+    expect(schedule.schedule_type).toBe("match");
+    expect(entities.matchScheduleModelSchema.parse({
+      ...schedule, arena: null, date: null, session: null, schedule_type: "match",
+      bracket_number: 1, schedule_number: null, next_corner: "blue",
+    })).toMatchObject({ arena: null, date: null, session: null, bracket_number: 1 });
+    expect(entities.drawTypeSchema.options).toEqual(["pool", "match"]);
+    expect(entities.matchScheduleTypeSchema.options).toEqual(["pool", "match"]);
     expect(schedule.properties.red.score.total).toBe(0);
     expect(schedule.properties.blue.winner_status.status).toBe("pending");
     expect(entities.matchScheduleCallsModelSchema.parse({ id, match_schedule_id: id, participant_team_id: id, created_at: "2026-11-07T00:00:00Z", created_by: id }).call_count).toBe(1);
