@@ -9,6 +9,8 @@ export const weightModelSchema = z.object({
   category_info: categoryModelSchema.describe("Category Info"),
   age_group_info: ageGroupModelSchema.describe("AgeGroup Info"),
   weight_class_info: weightClassModelSchema.nullable().describe("WeightClass Info"),
+  gender: z.union([z.literal(1), z.literal(2)]).nullable().default(null)
+    .describe("Weight Gender (1 = Male, 2 = Female)"),
   min_weight: z.number().nullable().describe("Min Weight"),
   max_weight: z.number().nullable().describe("Max Weight"),
 });

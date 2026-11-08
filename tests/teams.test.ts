@@ -44,7 +44,10 @@ describe("participant teams", () => {
     expect(infoParticipantResponseSchema.shape.participant_team_info).toBe(participantTeamInfoSchema);
     expect(infoParticipantResponseSchema.shape).not.toHaveProperty("weight_info");
     expect(infoParticipantResponseSchema.shape).not.toHaveProperty("contingent_info");
-    expect(drawModelSchema.shape.participant_team_info.shape.id).toBe(participantTeamInfoSchema.shape.id);
+    expect(drawModelSchema.shape).not.toHaveProperty("participant_team_info");
+    expect(drawModelSchema.shape).not.toHaveProperty("increment");
+    expect(drawModelSchema.shape).toHaveProperty("events_id");
+    expect(drawModelSchema.shape).toHaveProperty("weight_id");
     expect(drawModelSchema.shape).not.toHaveProperty("participant_info");
   });
 

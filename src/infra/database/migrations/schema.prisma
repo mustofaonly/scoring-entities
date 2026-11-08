@@ -113,6 +113,8 @@ model Events {
   match_schedules   MatchSchedule[]
   winners           Winner[]
 
+  draws Draw[]
+
   @@map("events")
 }
 
@@ -145,29 +147,29 @@ model AgeGroup {
 }
 
 model MatchSchedule {
-  id                     String               @id @db.Char(26)
-  events_id              String               @db.Char(26)
-  weight_id              String               @db.Char(26)
-  arena                  Int?                 @default(1)
-  schedule_type          MatchScheduleType    @default(match)
+  id                     String                @id @db.Char(26)
+  events_id              String                @db.Char(26)
+  weight_id              String                @db.Char(26)
+  arena                  Int?                  @default(1)
+  schedule_type          MatchScheduleType     @default(match)
   bracket_number         Int?
   schedule_number        Int?
-  pool                   Int                  @default(1)
-  round                  Int                  @default(1)
+  pool                   Int                   @default(1)
+  round                  Int                   @default(1)
   qualification          String
-  red_corner             String?              @db.Char(26)
-  blue_corner            String?              @db.Char(26)
+  red_corner             String?               @db.Char(26)
+  blue_corner            String?               @db.Char(26)
   date                   String?
   session                MatchScheduleSession?
-  winner                 String?              @db.Char(26)
-  next_match_schedule_id String?              @db.Char(26)
+  winner                 String?               @db.Char(26)
+  next_match_schedule_id String?               @db.Char(26)
   next_corner            MatchCorner?
-  status                 MatchScheduleStatus  @default(pending)
-  properties             Json                 @default("{\"red\":{\"status\":\"pending\",\"score\":{\"total\":0,\"properties\":{}},\"winner_status\":{\"status\":\"pending\",\"remarks\":null}},\"blue\":{\"status\":\"pending\",\"score\":{\"total\":0,\"properties\":{}},\"winner_status\":{\"status\":\"pending\",\"remarks\":null}}}")
+  status                 MatchScheduleStatus   @default(pending)
+  properties             Json                  @default("{\"red\":{\"status\":\"pending\",\"score\":{\"total\":0,\"properties\":{}},\"winner_status\":{\"status\":\"pending\",\"remarks\":null}},\"blue\":{\"status\":\"pending\",\"score\":{\"total\":0,\"properties\":{}},\"winner_status\":{\"status\":\"pending\",\"remarks\":null}}}")
   created_at             Float
   updated_at             Float
-  created_by             String               @db.Char(26)
-  updated_by             String               @db.Char(26)
+  created_by             String                @db.Char(26)
+  updated_by             String                @db.Char(26)
 
   events                   Events               @relation(fields: [events_id], references: [id])
   weight                   Weight               @relation(fields: [weight_id], references: [id])
@@ -316,26 +318,28 @@ model Scores {
 }
 
 model Draw {
-  id                    String          @id @db.Char(26)
-  pool                  Int             @default(1)
-  draw_type             DrawType        @default(match)
-  match_schedule_id     String?         @db.Char(26)
-  draw_number           Int?
-  corner                MatchCorner?
-  increment             Int             @default(1)
-  participant_team_id   String          @db.Char(26)
-  participant_team_info Json
-  created_at            Float
-  created_by            String          @db.Char(26)
-  updated_at            Float?
-  updated_by            String?         @db.Char(26)
-  participant_team      ParticipantTeam @relation(fields: [participant_team_id], references: [id])
-  match_schedule        MatchSchedule?  @relation(fields: [match_schedule_id], references: [id], onDelete: Restrict)
-  creator               Users           @relation("DrawCreator", fields: [created_by], references: [id])
-  updater               Users?          @relation("DrawUpdater", fields: [updated_by], references: [id])
+  id                  String          @id @db.Char(26)
+  pool                Int             @default(1)
+  draw_type           DrawType        @default(match)
+  events_id           String          @db.Char(26)
+  weight_id           String?         @db.Char(26)
+  match_schedule_id   String?         @db.Char(26)
+  draw_number         Int?
+  corner              MatchCorner?
+  participant_team_id String          @db.Char(26)
+  created_at          Float
+  created_by          String          @db.Char(26)
+  updated_at          Float?
+  updated_by          String?         @db.Char(26)
+  participant_team    ParticipantTeam @relation(fields: [participant_team_id], references: [id])
+  events              Events          @relation(fields: [events_id], references: [id])
+  weight              Weight?         @relation(fields: [weight_id], references: [id], onDelete: Restrict)
+  match_schedule      MatchSchedule?  @relation(fields: [match_schedule_id], references: [id], onDelete: Restrict)
+  creator             Users           @relation("DrawCreator", fields: [created_by], references: [id])
+  updater             Users?          @relation("DrawUpdater", fields: [updated_by], references: [id])
 
   @@index([match_schedule_id], map: "draw_match_schedule_idx")
-
+  @@index([weight_id, events_id, pool, draw_type], map: "draw_group_idx")
   @@map("draw")
 }
 
@@ -379,6 +383,7 @@ model Weight {
   category_id       String               @db.Char(26)
   age_group_id      String               @db.Char(26)
   weight_class_id   String?              @db.Char(26)
+  gender            Int?
   min_weight        Float?
   max_weight        Float?
   category_info     Category             @relation(fields: [category_id], references: [id])
@@ -388,6 +393,7 @@ model Weight {
   match_schedules   MatchSchedule[]
   verifications     WeightVerification[]
   winners           Winner[]
+  draws             Draw[]
 
   @@map("weight")
 }
