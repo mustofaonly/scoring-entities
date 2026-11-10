@@ -1,6 +1,6 @@
 {
   "name": "@musthida/scoring-entities",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Shared TypeScript entities and Zod schemass",
   "main": "./dist/index.js",
   "scripts": {
