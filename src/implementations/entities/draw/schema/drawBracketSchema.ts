@@ -20,6 +20,7 @@ export const drawBracketResponseSchema = listDrawGroupResponseSchema.extend({
     next_corner: true,
     winner: true,
     status: true,
+    schedule_number: true,
   }).extend({ bracket_number: z.number().int().nonnegative() })),
   teams: z.array(drawBracketTeamSchema),
 });

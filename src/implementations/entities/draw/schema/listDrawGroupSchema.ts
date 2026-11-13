@@ -7,6 +7,8 @@ export const listDrawGroupResponseSchema = z.object({
   pool: z.number().int().min(1),
   athletes_count: z.number().int().nonnegative(),
   team_count: z.number().int().nonnegative(),
+  match_count: z.number().int().nonnegative().default(0),
+  scheduled_match_count: z.number().int().nonnegative().default(0),
   drawed: z.number().describe("Draw timestamp in milliseconds since the Unix epoch"),
 });
 
