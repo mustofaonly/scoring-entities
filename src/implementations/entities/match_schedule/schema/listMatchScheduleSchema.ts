@@ -51,6 +51,12 @@ export const listMatchScheduleSchema = z.object({
     })
     .nullable()
     .describe("Winner Info"),
+  calls: z.array(
+    z.object({
+      count: z.number().describe("Call Count"),
+      created_at: z.number().describe("Created At"),
+    }),
+  ),
 });
 
 export type ListMatchSchedule = z.infer<typeof listMatchScheduleSchema>;
