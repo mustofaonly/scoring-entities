@@ -187,7 +187,7 @@ model MatchSchedule {
   draws                    Draw[]
 
   @@unique([events_id, weight_id, pool, bracket_number], map: "match_schedule_bracket_key")
-  @@unique([events_id, date, arena, schedule_number], map: "match_schedule_assignment_key")
+  @@unique([events_id, weight_id, pool, schedule_type, schedule_number], map: "match_schedule_pool_number_key")
   @@index([events_id, schedule_number], map: "match_schedule_event_number_idx")
   @@map("match_schedule")
 }
